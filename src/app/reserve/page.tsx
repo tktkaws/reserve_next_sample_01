@@ -40,7 +40,7 @@ export default function ReservePage() {
     fetchData();
   }, []);
 
-  const getUserName = (userId: number): string => {
+  const getUserName = (userId: string): string => {
     const user = users.find((u) => u.id === userId);
     return user ? user.name : '不明';
   };
@@ -101,7 +101,7 @@ export default function ReservePage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await api.deleteReservation(id);
       setReservations(reservations.filter((r) => r.id !== id));
@@ -164,7 +164,7 @@ export default function ReservePage() {
               <label className="block mb-1">利用者</label>
               <select
                 value={selectedUserId || ''}
-                onChange={(e) => setSelectedUserId(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) => setSelectedUserId(e.target.value || null)}
                 className="w-full p-2 border rounded"
                 required
               >

@@ -1,23 +1,23 @@
-export interface User {
-  id: number;
+export type User = {
+  id: string;
   name: string;
   email: string;
-}
+};
 
-export interface Reservation {
-  id: number;
-  userId: number;
+export type Reservation = {
+  id: string;
+  userId: string;
   date: string;
   startTime: string;
   endTime: string;
   purpose: string;
-}
+};
 
-export interface MeetingRoom {
+export type MeetingRoom = {
   id: number;
   name: string;
   capacity: number;
   equipment: string[];
-}
+};
 
-export type UserId = number | null; 
+export type UserId = string | null; 

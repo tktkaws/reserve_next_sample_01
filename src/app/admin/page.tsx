@@ -49,7 +49,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteUser = async (id: number) => {
+  const handleDeleteUser = async (id: string) => {
     try {
       await api.deleteUser(id);
       setUsers(users.filter((user) => user.id !== id));

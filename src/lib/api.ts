@@ -6,6 +6,7 @@ export const api = {
   // ユーザー関連
   getUsers: async (): Promise<User[]> => {
     const response = await fetch(`${API_BASE_URL}/users`);
+    if (!response.ok) throw new Error('ユーザー情報の取得に失敗しました');
     return response.json();
   },
 
@@ -15,31 +16,38 @@ export const api = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(user),
+      body: JSON.stringify({
+        ...user,
+        id: Math.random().toString(36).substring(2, 6), // ランダムな文字列を生成
+      }),
     });
+    if (!response.ok) throw new Error('ユーザーの作成に失敗しました');
     return response.json();
   },
 
-  updateUser: async (id: number, user: Partial<User>): Promise<User> => {
+  updateUser: async (id: string, user: User): Promise<User> => {
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(user),
     });
+    if (!response.ok) throw new Error('ユーザー情報の更新に失敗しました');
     return response.json();
   },
 
-  deleteUser: async (id: number): Promise<void> => {
-    await fetch(`${API_BASE_URL}/users/${id}`, {
+  deleteUser: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'DELETE',
     });
+    if (!response.ok) throw new Error('ユーザーの削除に失敗しました');
   },
 
   // 予約関連
   getReservations: async (): Promise<Reservation[]> => {
     const response = await fetch(`${API_BASE_URL}/reservations`);
+    if (!response.ok) throw new Error('予約情報の取得に失敗しました');
     return response.json();
   },
 
@@ -49,15 +57,20 @@ export const api = {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(reservation),
+      body: JSON.stringify({
+        ...reservation,
+        id: Math.random().toString(36).substring(2, 6), // ランダムな文字列を生成
+      }),
     });
+    if (!response.ok) throw new Error('予約の作成に失敗しました');
     return response.json();
   },
 
-  deleteReservation: async (id: number): Promise<void> => {
-    await fetch(`${API_BASE_URL}/reservations/${id}`, {
+  deleteReservation: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/reservations/${id}`, {
       method: 'DELETE',
     });
+    if (!response.ok) throw new Error('予約の削除に失敗しました');
   },
 
   // 会議室関連
