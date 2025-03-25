@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { Reservation, User, UserId } from '@/types';
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth, isSameDay, isSameMonth, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { ja } from 'date-fns/locale';
+
+type ViewMode = 'list' | 'week' | 'month';
 
 export default function ReservePage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -15,6 +17,7 @@ export default function ReservePage() {
   const [purpose, setPurpose] = useState<string>('');
   const [selectedUserId, setSelectedUserId] = useState<UserId>(null);
   const [error, setError] = useState<string>('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // 15分刻みの時間オプションを生成
   const timeOptions = Array.from({ length: 37 }, (_, i) => {
@@ -112,6 +115,158 @@ export default function ReservePage() {
     }
   };
 
+  // 週の予約を取得
+  const getWeekReservations = () => {
+    const start = startOfWeek(new Date(selectedDate));
+    const end = endOfWeek(new Date(selectedDate));
+    const days = eachDayOfInterval({ start, end });
+    
+    return days.map(day => ({
+      date: format(day, 'yyyy-MM-dd'),
+      reservations: reservations.filter(r => r.date === format(day, 'yyyy-MM-dd'))
+    }));
+  };
+
+  // 月の予約を取得
+  const getMonthReservations = () => {
+    const start = startOfMonth(new Date(selectedDate));
+    const end = endOfMonth(new Date(selectedDate));
+    const days = eachDayOfInterval({ start, end });
+    
+    return days.map(day => ({
+      date: format(day, 'yyyy-MM-dd'),
+      isCurrentMonth: isSameMonth(day, new Date(selectedDate)),
+      reservations: reservations.filter(r => r.date === format(day, 'yyyy-MM-dd'))
+    }));
+  };
+
+  const renderReservationList = () => (
+    <div className="space-y-4">
+      {reservations.map((reservation) => (
+        <div
+          key={reservation.id}
+          className="border p-4 rounded shadow-sm"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-semibold">
+                {format(new Date(reservation.date), 'yyyy年MM月dd日(E)', { locale: ja })}
+              </p>
+              <p>
+                {reservation.startTime} - {reservation.endTime}
+              </p>
+              <p>利用者: {getUserName(reservation.userId)}</p>
+              <p>目的: {reservation.purpose}</p>
+            </div>
+            <button
+              onClick={() => handleDelete(reservation.id)}
+              className="text-red-500 hover:text-red-700"
+            >
+              削除
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderWeekView = () => {
+    const weekReservations = getWeekReservations();
+    return (
+      <div className="grid grid-cols-7 gap-2">
+        {weekReservations.map(({ date, reservations }) => (
+          <div key={date} className="border p-2 rounded">
+            <div className="font-semibold mb-2">
+              {format(new Date(date), 'MM/dd(E)', { locale: ja })}
+            </div>
+            <div className="space-y-2">
+              {reservations.map((reservation) => (
+                <div key={reservation.id} className="text-sm bg-blue-50 p-1 rounded">
+                  <p>{reservation.startTime}-{reservation.endTime}</p>
+                  <p>{getUserName(reservation.userId)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderMonthView = () => {
+    const monthReservations = getMonthReservations();
+    return (
+      <div className="grid grid-cols-7 gap-2">
+        {['日', '月', '火', '水', '木', '金', '土'].map(day => (
+          <div key={day} className="font-semibold text-center p-2">
+            {day}
+          </div>
+        ))}
+        {monthReservations.map(({ date, isCurrentMonth, reservations }) => (
+          <div
+            key={date}
+            className={`border p-2 rounded min-h-[100px] ${
+              !isCurrentMonth ? 'bg-gray-50' : ''
+            }`}
+          >
+            <div className="font-semibold mb-2">
+              {format(new Date(date), 'd')}
+            </div>
+            <div className="space-y-1">
+              {reservations.map((reservation) => (
+                <div key={reservation.id} className="text-xs bg-blue-50 p-1 rounded">
+                  <p>{reservation.startTime}-{reservation.endTime}</p>
+                  <p>{getUserName(reservation.userId)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const handlePreviousPeriod = () => {
+    const currentDate = new Date(selectedDate);
+    let newDate: Date;
+    
+    if (viewMode === 'week') {
+      newDate = subWeeks(currentDate, 1);
+    } else {
+      newDate = subMonths(currentDate, 1);
+    }
+    
+    setSelectedDate(format(newDate, 'yyyy-MM-dd'));
+  };
+
+  const handleNextPeriod = () => {
+    const currentDate = new Date(selectedDate);
+    let newDate: Date;
+    
+    if (viewMode === 'week') {
+      newDate = addWeeks(currentDate, 1);
+    } else {
+      newDate = addMonths(currentDate, 1);
+    }
+    
+    setSelectedDate(format(newDate, 'yyyy-MM-dd'));
+  };
+
+  const handleToday = () => {
+    setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+  };
+
+  const getCurrentPeriodLabel = () => {
+    const date = new Date(selectedDate);
+    if (viewMode === 'week') {
+      const start = startOfWeek(date);
+      const end = endOfWeek(date);
+      return `${format(start, 'MM/dd')} - ${format(end, 'MM/dd')}`;
+    } else {
+      return format(date, 'yyyy年MM月');
+    }
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">会議室予約</h1>
@@ -202,33 +357,68 @@ export default function ReservePage() {
 
         <div>
           <h2 className="text-xl font-semibold mb-4">予約一覧</h2>
-          <div className="space-y-4">
-            {reservations.map((reservation) => (
-              <div
-                key={reservation.id}
-                className="border p-4 rounded shadow-sm"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold">
-                      {format(new Date(reservation.date), 'yyyy年MM月dd日(E)', { locale: ja })}
-                    </p>
-                    <p>
-                      {reservation.startTime} - {reservation.endTime}
-                    </p>
-                    <p>利用者: {getUserName(reservation.userId)}</p>
-                    <p>目的: {reservation.purpose}</p>
-                  </div>
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 rounded ${
+                    viewMode === 'list'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  リスト表示
+                </button>
+                <button
+                  onClick={() => setViewMode('week')}
+                  className={`px-4 py-2 rounded ${
+                    viewMode === 'week'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  週表示
+                </button>
+                <button
+                  onClick={() => setViewMode('month')}
+                  className={`px-4 py-2 rounded ${
+                    viewMode === 'month'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  月表示
+                </button>
+              </div>
+              {(viewMode === 'week' || viewMode === 'month') && (
+                <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => handleDelete(reservation.id)}
-                    className="text-red-500 hover:text-red-700"
+                    onClick={handlePreviousPeriod}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
                   >
-                    削除
+                    ←
+                  </button>
+                  <span className="font-semibold">{getCurrentPeriodLabel()}</span>
+                  <button
+                    onClick={handleNextPeriod}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    →
+                  </button>
+                  <button
+                    onClick={handleToday}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    今日
                   </button>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
+          {viewMode === 'list' && renderReservationList()}
+          {viewMode === 'week' && renderWeekView()}
+          {viewMode === 'month' && renderMonthView()}
         </div>
       </div>
     </main>
