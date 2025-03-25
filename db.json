@@ -1,0 +1,41 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "山田太郎",
+      "email": "yamada@example.com"
+    },
+    {
+      "id": 2,
+      "name": "鈴木花子",
+      "email": "suzuki@example.com"
+    }
+  ],
+  "reservations": [
+    {
+      "id": "78a6",
+      "userId": 1,
+      "date": "2025-03-25",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "purpose": ""
+    },
+    {
+      "id": "a479",
+      "userId": 2,
+      "date": "2025-03-25",
+      "startTime": "10:01",
+      "endTime": "11:00",
+      "purpose": ""
+    }
+  ],
+  "meetingRoom": {
+    "id": 1,
+    "name": "メイン会議室",
+    "capacity": 10,
+    "equipment": [
+      "プロジェクター",
+      "ホワイトボード"
+    ]
+  }
+}
