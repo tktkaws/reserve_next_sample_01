@@ -16,6 +16,13 @@ export default function ReservePage() {
   const [selectedUserId, setSelectedUserId] = useState<UserId>(null);
   const [error, setError] = useState<string>('');
 
+  // 15分刻みの時間オプションを生成
+  const timeOptions = Array.from({ length: 37 }, (_, i) => {
+    const hour = Math.floor(i / 4) + 9; // 9時から開始
+    const minute = (i % 4) * 15; // 0, 15, 30, 45分
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -125,23 +132,33 @@ export default function ReservePage() {
             </div>
             <div>
               <label className="block mb-1">開始時間</label>
-              <input
-                type="time"
+              <select
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 className="w-full p-2 border rounded"
-                step="1800"
-              />
+              >
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-500 mt-1">9:00から18:00の間で15分刻みで選択してください</p>
             </div>
             <div>
               <label className="block mb-1">終了時間</label>
-              <input
-                type="time"
+              <select
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="w-full p-2 border rounded"
-                step="1800"
-              />
+              >
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-500 mt-1">9:00から18:00の間で15分刻みで選択してください</p>
             </div>
             <div>
               <label className="block mb-1">利用者</label>
