@@ -73,6 +73,20 @@ export const api = {
     if (!response.ok) throw new Error('予約の削除に失敗しました');
   },
 
+  updateReservation: async (id: string, reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
+    const response = await fetch(`${API_BASE_URL}/reservations/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reservation),
+    });
+    if (!response.ok) {
+      throw new Error('予約の更新に失敗しました');
+    }
+    return response.json();
+  },
+
   // 会議室関連
   getMeetingRoom: async (): Promise<MeetingRoom> => {
     const response = await fetch(`${API_BASE_URL}/meetingRoom`);
